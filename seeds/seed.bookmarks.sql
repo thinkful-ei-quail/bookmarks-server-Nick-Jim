@@ -1,8 +1,10 @@
+TRUNCATE bookmarks;
+
 INSERT INTO bookmarks (title, url, description, rating)
 VALUES
   ('Google', 'http://www.google.com', 'Internet-related services and products.', 3),
   ('Thinkful', 'http://www.thinkful.com', '1-on-1 learning to accelerate your way to a new high-growth tech career!', 5),
-  ('Github', 'http://www.github.com', `Brings together the world's largest community of developers.`, 4),
+  ('Github', 'http://www.github.com', 'Brings together the world''s largest community of developers.', 4),
   ('Facebook', 'http://www.facebook.com', 'Old app would be irrelevant without instagram.', 2),
   ('Cheese', 'http://www.cheese.com', 'Cheese. It would be higher rated if I liked cheese.', 3),
   ('YouTube', 'http://www.youtube.com', 'A great place to waste time.', 5),
