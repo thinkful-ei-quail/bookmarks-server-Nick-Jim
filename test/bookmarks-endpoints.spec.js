@@ -19,7 +19,7 @@ describe('Bookmarks Endpoints', function () {
 
   before('clean the table', () => db('bookmarks').truncate());
 
-  //afterEach('clean the table', () => db('bookmarks').truncate());
+  afterEach('clean the table', () => db('bookmarks').truncate());
 
   describe('GET /bookmarks', () => {
     context('Given there is no data', () => {
@@ -76,6 +76,28 @@ describe('Bookmarks Endpoints', function () {
           //     .get(`/bookmarks/${postRes.body.id}`)
           //     .expect(postRes.body)
           // );
+      });
+
+      const requiredFields = [ 'title', 'url', 'rating' ];
+
+      requiredFields.forEach(field => {
+        const newBookmark = {
+          title: 'New title',
+          url: 'http://www.newplace.com',
+          description: 'New desc...',
+          rating: 5
+        };
+
+        it(`responds with 400 and an error message if ${field} is missing`, () => {
+          delete newBookmark[field];
+
+          return supertest(app)
+            .post('/bookmarks')
+            .send(newBookmark)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            });
+        });
       });
     });
   });
