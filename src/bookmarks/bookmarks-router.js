@@ -24,6 +24,7 @@ bookmarksRouter
         res.status(201).location(`/bookmarks/${bookmark.id}`).json(bookmark);
       })
       .catch(next);
+      console.log('cheese');
     // const { title, url, description = '', rating } = req.body;
 
     // //check that title url and rating are passed in
