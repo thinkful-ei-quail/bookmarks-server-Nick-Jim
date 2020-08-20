@@ -22,6 +22,15 @@ describe.only('Bookmarks Endpoints', function () {
 
   describe('GET /bookmarks', () => {
     //todo run with no data
+    context('Given there is no data', () => {
+      it('responds with 200 and an empty array', () => {
+        return supertest(app).get('/bookmarks').expect(200, []);
+      });
+
+      it('responds with 404 for a specified bookmark', () => {
+        return supertest(app).get('/bookmarks/2').expect(404);
+      });
+    });
 
     context('Given there are bookmarks in the database', () => {
       const testBookmarks = makeBookmarksArray();

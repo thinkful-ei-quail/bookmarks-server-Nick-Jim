@@ -67,7 +67,14 @@ bookmarksRouter
     const { id } = req.params;
 
     BookmarksService.getBookmarkById(req.app.get('db'), id)
-      .then((bookmark) => res.json(bookmark))
+      .then((bookmark) => {
+        if (!bookmark) {
+          return res
+            .status(404)
+            .json({ message: `bookmark id ${id} does not exist` });
+        }
+        return res.json(bookmark);
+      })
       .catch(next);
   })
   .delete((req, res) => {
