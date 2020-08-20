@@ -3,14 +3,19 @@ const { v4: uuid } = require('uuid');
 const logger = require('../logger');
 const { bookmarks } = require('../store');
 const { PORT } = require('../config');
+const BookmarksService = require('./bookmarks-service');
 
 const bookmarksRouter = express.Router();
 const bodyParser = express.json();
 
 bookmarksRouter
     .route('/')
-    .get((req, res) => {
-        res.json(bookmarks);
+    .get((req, res, next) => {
+        BookmarksService.getAllBookmarks(
+            req.app.get('db')
+        )
+        .then(bookmarks => res.json(bookmarks))
+        .catch(next);
     })
     .post(bodyParser, (req, res) => {
         const { title, url, description = '', rating } = req.body;
