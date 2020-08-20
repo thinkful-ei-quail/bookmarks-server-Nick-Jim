@@ -17,65 +17,46 @@ bookmarksRouter
   })
   .post(bodyParser, (req, res, next) => {
     const { title, url, description = '', rating } = req.body;
-    const newBookmark = { title, url, description, rating };
+    const newBookmark = {
+      title,
+      url,
+      description,
+      rating,
+    };
 
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
         return res.status(400).json({
-          error: { message: `Missing '${key}' in request body` }
+          error: {
+            message: `Missing '${key}' in request body`,
+          },
         });
-      };
-    };
+      }
+    }
+
+    // check that rating is a number between 0 and 5
+    if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
+      logger.error(`Rating ${rating} supplied is invalid`);
+      return res.status(400).json({
+        error: {
+          message: `Rating must be a number between 0 and 5, recieved ${rating}`,
+        },
+      });
+    }
+
+    // check that url at least starts with http:// or https://
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      logger.error(`URL ${url} supplied is invalid`);
+      return res
+        .status(400)
+        .json({ error: { message: 'URL must begin with http(s)://' } });
+    }
 
     BookmarksService.insertBookmark(req.app.get('db'), newBookmark)
-      .then(bookmark => {
+      .then((bookmark) => {
         res.status(201).location(`/bookmarks/${bookmark.id}`).json(bookmark);
       })
       .catch(next);
-      console.log('cheese');
-    // const { title, url, description = '', rating } = req.body;
-
-    // //check that title url and rating are passed in
-    // if (!title) {
-    //   logger.error(`Title is required`);
-    //   return res.status(400).send('Invalid data');
-    // }
-    // if (!url) {
-    //   logger.error(`URL is required`);
-    //   return res.status(400).send('Invalid data');
-    // }
-    // if (!rating) {
-    //   logger.error(`Rating is required`);
-    //   return res.status(400).send('Invalid data');
-    // }
-    // // check that rating is passed as a number between 0 and 5
-    // if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
-    //   logger.error(`Rating ${rating} supplied is invalid`);
-    //   return res.status(400).send('Rating must be a number between 0 and 5');
-    // }
-    // // check that url at least starts with http:// or https://
-    // if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    //   logger.error(`URL ${url} supplied is invalid`);
-    //   return res.status(400).send('URL must begin with http(s)://');
-    // }
-
-    // const id = uuid();
-    // const bookmark = {
-    //   id,
-    //   title,
-    //   url,
-    //   description,
-    //   rating,
-    // };
-
-    // bookmarks.push(bookmark);
-
-    // logger.info(`Bookmark with id ${id} created`);
-
-    // res
-    //   .status(201)
-    //   .location(`http://localhost:${PORT}/bookmarks/${id}`)
-    //   .json(bookmark);
   });
 
 bookmarksRouter

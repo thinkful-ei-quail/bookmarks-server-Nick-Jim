@@ -56,36 +56,36 @@ describe('Bookmarks Endpoints', function () {
           title: 'New title',
           url: 'http://www.newplace.com',
           description: 'New desc...',
-          rating: 5
+          rating: 5,
         };
 
         return supertest(app)
           .post('/bookmarks')
           .send(newBookmark)
           .expect(201)
-          .then(res => {
+          .then((res) => {
             expect(res.body.title).to.eql(newBookmark.title);
             expect(res.body.url).to.eql(newBookmark.url);
             expect(res.body.description).to.eql(newBookmark.description);
             expect(res.body.rating).to.eql(newBookmark.rating);
             expect(res.body.id).to.exist;
             expect(res.headers.location).to.eql(`/bookmarks/${res.body.id}`);
-          })
-          // .then(postRes => 
-          //   supertest(app)
-          //     .get(`/bookmarks/${postRes.body.id}`)
-          //     .expect(postRes.body)
-          // );
+          });
+        // .then(postRes =>
+        //   supertest(app)
+        //     .get(`/bookmarks/${postRes.body.id}`)
+        //     .expect(postRes.body)
+        // );
       });
 
-      const requiredFields = [ 'title', 'url', 'rating' ];
+      const requiredFields = ['title', 'url', 'rating'];
 
-      requiredFields.forEach(field => {
+      requiredFields.forEach((field) => {
         const newBookmark = {
           title: 'New title',
           url: 'http://www.newplace.com',
           description: 'New desc...',
-          rating: 5
+          rating: 5,
         };
 
         it(`responds with 400 and an error message if ${field} is missing`, () => {
@@ -95,9 +95,43 @@ describe('Bookmarks Endpoints', function () {
             .post('/bookmarks')
             .send(newBookmark)
             .expect(400, {
-              error: { message: `Missing '${field}' in request body` }
+              error: { message: `Missing '${field}' in request body` },
             });
         });
+      });
+
+      it('responds with 400 if rating is NaN', () => {
+        const newBookmark = {
+          title: 'New title',
+          url: 'http://www.newplace.com',
+          description: 'New desc...',
+          rating: 'five',
+        };
+        return supertest(app)
+          .post('/bookmarks')
+          .send(newBookmark)
+          .expect(400, {
+            error: {
+              message: `Rating must be a number between 0 and 5, recieved ${newBookmark.rating}`,
+            },
+          });
+      });
+
+      it('responds with 400 if invalid URL', () => {
+        const newBookmark = {
+          title: 'New title',
+          url: 'www.newplace.com',
+          description: 'New desc...',
+          rating: 3,
+        };
+        return supertest(app)
+          .post('/bookmarks')
+          .send(newBookmark)
+          .expect(400, {
+            error: {
+              message: 'URL must begin with http(s)://',
+            },
+          });
       });
     });
   });
