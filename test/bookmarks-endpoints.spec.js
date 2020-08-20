@@ -49,7 +49,7 @@ describe('Bookmarks Endpoints', function () {
     });
   });
 
-  describe.only('POST /bookmarks', () => {
+  describe('POST /bookmarks', () => {
     context('Given there is no data', () => {
       it('creates a bookmark, responding with 201 and the new bookmark', () => {
         const newBookmark = {
@@ -132,6 +132,25 @@ describe('Bookmarks Endpoints', function () {
               message: 'URL must begin with http(s)://',
             },
           });
+      });
+    });
+  });
+
+  describe.only('DELETE /bookmarks/:id', () => {
+    context('Given there is no data', () => {
+      it('responds with 404 when bookmark does not exist', () => {
+        return supertest(app).delete('/bookmarks/2').expect(404);
+      });
+    });
+    context('Given there are bookmarks in the database', () => {
+      const testBookmarks = makeBookmarksArray();
+
+      beforeEach('insert test data', () => {
+        return db.into('bookmarks').insert(testBookmarks);
+      });
+
+      it('responds with 204 and deletes bookmark', () => {
+        return supertest(app).delete('/bookmarks/2').expect(204);
       });
     });
   });
