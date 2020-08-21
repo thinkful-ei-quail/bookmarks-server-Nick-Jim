@@ -1,18 +1,26 @@
 const express = require('express');
-const { v4: uuid } = require('uuid');
 const logger = require('../logger');
-const { bookmarks } = require('../store');
-const { PORT } = require('../config');
+const xss = require('xss');
 const BookmarksService = require('./bookmarks-service');
 
 const bookmarksRouter = express.Router();
 const bodyParser = express.json();
 
+const serializeBookmark = bookmark => ({
+  id: bookmark.id,
+  title: xss(bookmark.title),
+  url: xss(bookmark.url),
+  description: xss(bookmark.description),
+  rating: bookmark.rating
+});
+
 bookmarksRouter
   .route('/')
   .get((req, res, next) => {
     BookmarksService.getAllBookmarks(req.app.get('db'))
-      .then((bookmarks) => res.json(bookmarks))
+      .then(bookmarks => {
+        res.json(bookmarks.map(bookmark => serializeBookmark(bookmark)));
+      })
       .catch(next);
   })
   .post(bodyParser, (req, res, next) => {
@@ -54,7 +62,7 @@ bookmarksRouter
 
     BookmarksService.insertBookmark(req.app.get('db'), newBookmark)
       .then((bookmark) => {
-        res.status(201).location(`/bookmarks/${bookmark.id}`).json(bookmark);
+        res.status(201).location(`/bookmarks/${bookmark.id}`).json(serializeBookmark(bookmark));
       })
       .catch(next);
   });
@@ -77,7 +85,7 @@ bookmarksRouter
       .catch(next);
   })
   .get((req, res, next) => {
-    res.json(res.bookmark);
+    res.json(serializeBookmark(res.bookmark));
   })
   .delete((req, res, next) => {
     const { id } = req.params;
@@ -86,18 +94,9 @@ bookmarksRouter
         res.status(204).end();
       })
       .catch(next);
-
-    // const bookmarkIndex = bookmarks.findIndex((bm) => bm.id == id);
-
-    // if (bookmarkIndex === -1) {
-    //   logger.error(`Bookmark with id ${id} not found`);
-    //   return res.status(404).send('Not Found');
-    // }
-
-    // const deleteBook = bookmarks.splice(bookmarkIndex, 1);
-
-    // logger.info(`Bookmark with id ${id} deleted.`);
-    // res.status(204).end();
+  })
+  .patch(bodyParser, (req, res, next) => {
+    res.status(204).end();
   });
 
 module.exports = bookmarksRouter;

@@ -1,6 +1,6 @@
 const app = require('../src/app');
 const knex = require('knex');
-const makeBookmarksArray = require('./bookmarks-fixtures');
+const { makeBookmarksArray, makeMaliciousBookmark } = require('./bookmarks-fixtures');
 const supertest = require('supertest');
 const { expect } = require('chai');
 
@@ -45,6 +45,36 @@ describe('Bookmarks Endpoints', function () {
 
       it('resonds with 200 and the specified bookmark', () => {
         return supertest(app).get('/bookmarks/2').expect(200, testBookmarks[1]);
+      });
+    });
+
+    context('Given an XSS attack bookmark', () => {
+      const { maliciousBookmark, expectedBookmark } = makeMaliciousBookmark();
+
+      beforeEach('insert malicious bookmark', () => {
+        return db
+          .into('bookmarks')
+          .insert([maliciousBookmark]);
+      });
+
+      it('removes XSS attack content for GET /bookmarks', () => {
+        return supertest(app)
+          .get('/bookmarks')
+          .expect(200)
+          .expect(res => {
+            expect(res.body[0].title).to.eql(expectedBookmark.title)
+            expect(res.body[0].description).to.eql(expectedBookmark.description)
+          });
+      });
+
+      it('removes XSS attack content for GET /bookmarks/:id', () => {
+        return supertest(app)
+          .get(`/bookmarks/${maliciousBookmark.id}`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.title).to.eql(expectedBookmark.title)
+            expect(res.body.description).to.eql(expectedBookmark.description)
+          });
       });
     });
   });
@@ -134,9 +164,22 @@ describe('Bookmarks Endpoints', function () {
           });
       });
     });
+
+    context('Given an XSS attack bookmark', () => {
+      it('removes XSS attack content from response', () => {
+        const { maliciousBookmark, expectedBookmark } = makeMaliciousBookmark();
+        return supertest(app)
+            .post('/bookmarks')
+            .send(maliciousBookmark)
+            .then(res => {
+                expect(res.body.title).to.eql(expectedBookmark.title);
+                expect(res.body.content).to.eql(expectedBookmark.content);
+            });
+    });
+    })
   });
 
-  describe.only('DELETE /bookmarks/:id', () => {
+  describe('DELETE /bookmarks/:id', () => {
     context('Given there is no data', () => {
       it('responds with 404 when bookmark does not exist', () => {
         return supertest(app).delete('/bookmarks/2').expect(404);
